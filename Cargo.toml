@@ -4,4 +4,5 @@ version = "0.0.1"
 authors = [ "Rafał Hirsz <rafal@hirsz.co>" ]
 
 [dependencies]
+byteorder = "0.4"
 rand = "0.3"
