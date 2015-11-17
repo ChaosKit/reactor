@@ -1,0 +1,7 @@
+[package]
+name = "reactor"
+version = "0.0.1"
+authors = [ "Rafał Hirsz <rafal@hirsz.co>" ]
+
+[dependencies]
+rand = "0.3"
