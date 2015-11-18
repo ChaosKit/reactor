@@ -13,7 +13,7 @@ fn handle_client(mut stream: TcpStream) {
     let transform = Transform::from_applicable(variation);
 
     let mut point = rand::random::<Point>();
-    for _ in 0..10 {
+    for _ in 0..100000 {
         point = transform.apply(&point);
         let _ = stream.write(&point.bytes());
     }
