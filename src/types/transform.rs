@@ -1,18 +1,18 @@
 use std::boxed::Box;
-use types::{Number, Point, Applicable, AffineTransformation};
+use types::{Number, Point, Applicable, Variation, AffineTransformation};
 
-type Variation = (Box<Applicable>, Number);
+type WeightedVariation = (Box<Variation>, Number);
 
 pub struct Transform {
     pre: AffineTransformation,
-    variations: Vec<Variation>,
+    variations: Vec<WeightedVariation>,
     post: AffineTransformation
 }
 
 impl Transform {
-    pub fn from_applicable<T: Applicable + 'static>(applicable: T) -> Transform {
+    pub fn from_variation<T: Variation + 'static>(variation: T) -> Transform {
         let mut builder = TransformBuilder::new();
-        builder.add_variation(applicable);
+        builder.add_variation(variation);
         builder.finalize()
     }
 }
@@ -20,7 +20,9 @@ impl Transform {
 impl Applicable for Transform {
     fn apply(&self, point: &Point) -> Point {
         let initial = self.pre.apply(point);
-        let after_variations = self.variations.iter().fold(initial, |p, &(ref applicable, weight)| applicable.apply(&p) * weight);
+        let after_variations = self.variations.iter().fold(initial, |p, &(ref variation, weight)| {
+            variation.apply(&p, &self.pre) * weight
+        });
 
         self.post.apply(&after_variations)
     }
@@ -28,7 +30,7 @@ impl Applicable for Transform {
 
 pub struct TransformBuilder {
     pre: AffineTransformation,
-    variations: Vec<Variation>,
+    variations: Vec<WeightedVariation>,
     post: AffineTransformation
 }
 
@@ -51,12 +53,12 @@ impl TransformBuilder {
         self
     }
 
-    pub fn add_variation<T: Applicable + 'static>(&mut self, applicable: T) -> &mut TransformBuilder {
-        self.add_weighted_variation(applicable, 1.0)
+    pub fn add_variation<T: Variation + 'static>(&mut self, variation: T) -> &mut TransformBuilder {
+        self.add_weighted_variation(variation, 1.0)
     }
 
-    pub fn add_weighted_variation<T: Applicable + 'static>(&mut self, applicable: T, weight: Number) -> &mut TransformBuilder {
-        self.variations.push((Box::new(applicable), weight));
+    pub fn add_weighted_variation<T: Variation + 'static>(&mut self, variation: T, weight: Number) -> &mut TransformBuilder {
+        self.variations.push((Box::new(variation), weight));
 
         self
     }

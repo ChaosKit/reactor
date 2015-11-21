@@ -10,7 +10,7 @@ const ADDRESS: &'static str = "127.0.0.1:24267";
 
 fn handle_client(mut stream: TcpStream) {
     let variation = variations::DeJong(-1.860391774909643026, 1.100373086160729041, -1.086431197851741803, -1.426991546514589704);
-    let transform = Transform::from_applicable(variation);
+    let transform = Transform::from_variation(variation);
 
     let mut point = rand::random::<Point>();
     for _ in 0..100000 {
