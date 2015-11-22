@@ -1,7 +1,7 @@
 extern crate rand;
 extern crate byteorder;
 
-use types::{Point, Applicable, Transform};
+use types::{Number, Point, Applicable, Transform};
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
 use std::thread;
@@ -13,8 +13,12 @@ fn handle_client(mut stream: TcpStream) {
     let transform = Transform::from_variation(variation);
 
     let mut point = rand::random::<Point>();
-    for _ in 0..100000 {
+    let mut color = rand::random::<Number>();
+    for _ in 0..1000000 {
         point = transform.apply(&point);
+        color = (color + transform.color()) / 2.0;
+
+        point.z = color;
         let _ = stream.write(&point.bytes());
     }
 }

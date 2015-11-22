@@ -6,7 +6,8 @@ type WeightedVariation = (Box<Variation>, Number);
 pub struct Transform {
     pre: AffineTransformation,
     variations: Vec<WeightedVariation>,
-    post: AffineTransformation
+    post: AffineTransformation,
+    color: Number
 }
 
 impl Transform {
@@ -14,6 +15,10 @@ impl Transform {
         let mut builder = TransformBuilder::new();
         builder.add_variation(variation);
         builder.finalize()
+    }
+
+    pub fn color(&self) -> Number {
+        return self.color;
     }
 }
 
@@ -31,7 +36,8 @@ impl Applicable for Transform {
 pub struct TransformBuilder {
     pre: AffineTransformation,
     variations: Vec<WeightedVariation>,
-    post: AffineTransformation
+    post: AffineTransformation,
+    color: Number
 }
 
 impl TransformBuilder {
@@ -39,7 +45,8 @@ impl TransformBuilder {
         TransformBuilder {
             pre: AffineTransformation::identity(),
             post: AffineTransformation::identity(),
-            variations: Vec::new()
+            variations: Vec::new(),
+            color: 0.5
         }
     }
 
@@ -63,7 +70,12 @@ impl TransformBuilder {
         self
     }
 
+    pub fn color(&mut self, color: Number) -> &mut TransformBuilder {
+        self.color = color;
+        self
+    }
+
     pub fn finalize(self) -> Transform {
-        Transform { pre: self.pre, post: self.post, variations: self.variations }
+        Transform { pre: self.pre, post: self.post, variations: self.variations, color: self.color }
     }
 }
