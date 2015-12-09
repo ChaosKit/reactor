@@ -12,9 +12,7 @@ pub struct Transform {
 
 impl Transform {
     pub fn from_variation<T: Variation + 'static>(variation: T) -> Transform {
-        let mut builder = TransformBuilder::new();
-        builder.add_variation(variation);
-        builder.finalize()
+        TransformBuilder::new().add_variation(variation).finalize()
     }
 
     pub fn color(&self) -> Number {
@@ -50,27 +48,27 @@ impl TransformBuilder {
         }
     }
 
-    pub fn pre(&mut self, transformation: AffineTransformation) -> &mut TransformBuilder {
+    pub fn pre(mut self, transformation: AffineTransformation) -> TransformBuilder {
         self.pre = transformation;
         self
     }
 
-    pub fn post(&mut self, transformation: AffineTransformation) -> &mut TransformBuilder {
+    pub fn post(mut self, transformation: AffineTransformation) -> TransformBuilder {
         self.post = transformation;
         self
     }
 
-    pub fn add_variation<T: Variation + 'static>(&mut self, variation: T) -> &mut TransformBuilder {
+    pub fn add_variation<T: Variation + 'static>(self, variation: T) -> TransformBuilder {
         self.add_weighted_variation(variation, 1.0)
     }
 
-    pub fn add_weighted_variation<T: Variation + 'static>(&mut self, variation: T, weight: Number) -> &mut TransformBuilder {
+    pub fn add_weighted_variation<T: Variation + 'static>(mut self, variation: T, weight: Number) -> TransformBuilder {
         self.variations.push((Box::new(variation), weight));
 
         self
     }
 
-    pub fn color(&mut self, color: Number) -> &mut TransformBuilder {
+    pub fn color(mut self, color: Number) -> TransformBuilder {
         self.color = color;
         self
     }
