@@ -1,7 +1,7 @@
 extern crate rand;
 extern crate byteorder;
 
-use types::{Number, Point, Particle};
+use types::System;
 use types::transform::*;
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
@@ -15,14 +15,13 @@ fn handle_client(mut stream: TcpStream) {
         .add_variation(variation)
         .color(1.0)
         .finalize();
+    let mut rng = rand::thread_rng();
+    let system = System { ttl: 30 };
 
-    let mut particle = Particle {
-        point: rand::random::<Point>(),
-        color: rand::random::<Number>()
-    };
+    let mut particle = system.make_particle(&mut rng);
 
-    for _ in 0..1000000 {
-        particle = transform.animate(&particle);
+    for _ in 0..10000000 {
+        particle = system.animate_particle(particle, &transform, &mut rng);
 
         let _ = stream.write(&particle.bytes());
     }

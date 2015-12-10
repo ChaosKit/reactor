@@ -4,18 +4,11 @@ use byteorder::{ByteOrder, BigEndian};
 
 pub struct Particle {
     pub point: Point,
-    pub color: Number
+    pub color: Number,
+    pub ttl: i8
 }
 
 impl Particle {
-    pub fn new() -> Particle {
-        Particle {point: Point::new(), color: 0.0}
-    }
-
-    pub fn from_point(point: Point) -> Particle {
-        Particle {point: point, color: 0.0}
-    }
-
     pub fn bytes(&self) -> [u8; 8*3] {
         let mut buffer: [u8; 8*3] = [0; 8 * 3];
 
@@ -29,6 +22,6 @@ impl Particle {
 
 impl fmt::Display for Particle {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Particle {}, color: {}", self.point, self.color)
+        write!(f, "Particle {}, color: {}, ttl: {}", self.point, self.color, self.ttl)
     }
 }
