@@ -1,4 +1,5 @@
 pub use self::point::Point;
+pub use self::particle::Particle;
 pub use self::affine_transformation::AffineTransformation;
 pub use self::transform::Transform;
 
@@ -13,5 +14,6 @@ pub trait Variation {
 }
 
 mod point;
+mod particle;
 pub mod affine_transformation;
 pub mod transform;

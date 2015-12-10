@@ -1,5 +1,5 @@
 use std::boxed::Box;
-use types::{Number, Point, Applicable, Variation, AffineTransformation};
+use types::{Number, Point, Particle, Applicable, Variation, AffineTransformation};
 
 type WeightedVariation = (Box<Variation>, Number);
 
@@ -17,6 +17,13 @@ impl Transform {
 
     pub fn color(&self) -> Number {
         return self.color;
+    }
+
+    pub fn animate(&self, particle: &Particle) -> Particle {
+        Particle {
+            point: self.apply(&particle.point),
+            color: (self.color + particle.color) / 2.0
+        }
     }
 }
 

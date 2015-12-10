@@ -25,8 +25,7 @@ impl Applicable for AffineTransformation {
     fn apply(&self, point: &Point) -> Point {
         Point {
             x: self.0 * point.x + self.1 * point.y + self.2,
-            y: self.3 * point.x + self.4 * point.y + self.5,
-            z: point.z
+            y: self.3 * point.x + self.4 * point.y + self.5
         }
     }
 }
