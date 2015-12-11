@@ -25,7 +25,7 @@ fn handle_client(mut stream: TcpStream) {
 
     let mut particle = system.make_particle(&mut rng);
 
-    for _ in 0..10000000 {
+    for _ in 0..1000000 {
         particle = system.animate_particle(particle, &transform, &mut rng);
         let projected_particle = final_transform.animate(&particle);
 
