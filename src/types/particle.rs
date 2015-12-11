@@ -18,6 +18,13 @@ impl Particle {
 
         buffer
     }
+
+    pub fn age(self) -> Particle {
+        Particle {
+            ttl: self.ttl - 1,
+            .. self
+        }
+    }
 }
 
 impl fmt::Display for Particle {

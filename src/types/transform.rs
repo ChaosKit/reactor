@@ -19,11 +19,11 @@ impl Transform {
         return self.color;
     }
 
-    pub fn animate(&self, particle: Particle) -> Particle {
+    pub fn animate(&self, particle: &Particle) -> Particle {
         Particle {
             point: self.apply(&particle.point),
             color: (self.color + particle.color) / 2.0,
-            ttl: particle.ttl - 1
+            ttl: particle.ttl
         }
     }
 }

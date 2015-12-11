@@ -10,20 +10,26 @@ use std::thread;
 const ADDRESS: &'static str = "127.0.0.1:24267";
 
 fn handle_client(mut stream: TcpStream) {
+    let mut rng = rand::thread_rng();
+    let system = System { ttl: 30 };
+
     let variation = variations::DeJong(-1.860391774909643026, 1.100373086160729041, -1.086431197851741803, -1.426991546514589704);
     let transform = TransformBuilder::new()
         .add_variation(variation)
         .color(1.0)
         .finalize();
-    let mut rng = rand::thread_rng();
-    let system = System { ttl: 30 };
+    let final_transform = TransformBuilder::new()
+        .add_variation(variations::Linear)
+        .color(1.0)
+        .finalize();
 
     let mut particle = system.make_particle(&mut rng);
 
     for _ in 0..10000000 {
         particle = system.animate_particle(particle, &transform, &mut rng);
+        let projected_particle = final_transform.animate(&particle);
 
-        let _ = stream.write(&particle.bytes());
+        let _ = stream.write(&projected_particle.bytes());
     }
     println!("Payload sent");
 }

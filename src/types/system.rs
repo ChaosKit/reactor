@@ -18,6 +18,6 @@ impl System {
     }
 
     pub fn animate_particle<R: Rng>(&self, particle: Particle, transform: &Transform, rng: &mut R) -> Particle {
-        transform.animate(if particle.ttl <= 0 { self.make_particle(rng) } else { particle })
+        transform.animate(&if particle.ttl <= 0 { self.make_particle(rng) } else { particle }).age()
     }
 }
