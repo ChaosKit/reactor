@@ -5,4 +5,6 @@ authors = [ "Rafał Hirsz <rafal@hirsz.co>" ]
 
 [dependencies]
 byteorder = "0.4"
+crossbeam = "0.1"
 rand = "0.3"
+num_cpus = "0.2"

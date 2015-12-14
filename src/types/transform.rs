@@ -26,6 +26,12 @@ impl Transform {
             ttl: particle.ttl
         }
     }
+
+    pub fn animate_mut<'a>(&'a self, particle: &'a mut Particle) -> &mut Particle {
+        particle.point = self.apply(&particle.point);
+        particle.color = (self.color + particle.color) / 2.0;
+        particle
+    }
 }
 
 impl Applicable for Transform {

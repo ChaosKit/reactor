@@ -2,13 +2,22 @@ use std::fmt;
 use types::{Number, Point};
 use byteorder::{ByteOrder, BigEndian};
 
+#[derive(Copy, Clone)]
 pub struct Particle {
     pub point: Point,
     pub color: Number,
-    pub ttl: i8
+    pub ttl: i32
 }
 
 impl Particle {
+    pub fn new() -> Particle {
+        Particle {
+            point: Point::new(),
+            color: 0.5,
+            ttl: 1
+        }
+    }
+
     pub fn bytes(&self) -> [u8; 8*3] {
         let mut buffer: [u8; 8*3] = [0; 8 * 3];
 
@@ -19,16 +28,20 @@ impl Particle {
         buffer
     }
 
-    pub fn age(self) -> Particle {
-        Particle {
-            ttl: self.ttl - 1,
-            .. self
-        }
+    pub fn aged(self) -> Particle {
+        let mut particle = self.clone();
+        particle.age();
+        particle
+    }
+
+    pub fn age(&mut self) -> &mut Particle {
+        self.ttl -= 1;
+        self
     }
 }
 
-impl fmt::Display for Particle {
+impl fmt::Debug for Particle {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Particle {}, color: {}, ttl: {}", self.point, self.color, self.ttl)
+        write!(f, "Particle {:?}, color: {:?}, ttl: {:?}", self.point, self.color, self.ttl)
     }
 }
