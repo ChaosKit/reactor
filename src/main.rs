@@ -3,14 +3,15 @@ extern crate byteorder;
 extern crate num_cpus;
 extern crate crossbeam;
 
+mod types;
+mod consts;
+mod variations;
+
 use types::{System, Particle};
 use types::transform::*;
-use std::io::prelude::*;
-use std::net::{TcpListener, TcpStream};
-use std::thread;
 use std::sync::mpsc;
+use std::io::{self, Write};
 
-const ADDRESS: &'static str = "127.0.0.1:24267";
 const MAX_TTL: i32 = 30;
 const PARTICLE_COUNT: i32 = 10000;
 const ITERATION_COUNT: i32 = 1000;
@@ -20,7 +21,7 @@ enum Message {
     Finished,
 }
 
-fn handle_client(mut stream: TcpStream) {
+fn generate() {
     let mut global_rng = rand::thread_rng();
     let system = System { ttl: MAX_TTL };
 
@@ -60,41 +61,21 @@ fn handle_client(mut stream: TcpStream) {
             });
         }
 
+        let mut stdout = io::stdout();
         let mut finished_threads: usize = 0;
         while finished_threads < thread_count {
             let message = rx.recv().unwrap();
 
             match message {
                 Message::Generated(particle) => {
-                    let _ = stream.write(&particle.bytes());
+                    let _ = stdout.write(&particle.bytes());
                 },
                 Message::Finished => finished_threads += 1
             }
         }
     });
-
-    println!("Payload sent");
 }
 
 fn main() {
-    let listener = TcpListener::bind(ADDRESS).unwrap();
-    println!("Reactor is listening on {}", ADDRESS);
-
-    for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
-                println!("Sending payload…");
-                thread::spawn(move|| {
-                    handle_client(stream)
-                });
-            }
-            Err(e) => {
-                println!("Connection failed: {}", e);
-            }
-        }
-    }
+    generate();
 }
-
-mod types;
-mod consts;
-mod variations;
