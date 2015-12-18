@@ -16,6 +16,6 @@ pub trait Variation: Send + Sync {
 
 mod point;
 mod particle;
-mod system;
+pub mod system;
 pub mod affine_transformation;
 pub mod transform;

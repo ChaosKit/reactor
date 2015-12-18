@@ -7,7 +7,8 @@ mod types;
 mod consts;
 mod variations;
 
-use types::{System, Particle};
+use types::Particle;
+use types::system::*;
 use types::transform::*;
 use std::sync::mpsc;
 use std::io::{self, Write};
@@ -23,16 +24,16 @@ enum Message {
 
 fn generate() {
     let mut global_rng = rand::thread_rng();
-    let system = System { ttl: MAX_TTL };
 
     let variation = variations::DeJong(-1.860391774909643026, 1.100373086160729041, -1.086431197851741803, -1.426991546514589704);
     let transform = TransformBuilder::new()
         .add_variation(variation)
         .color(1.0)
         .finalize();
-    let final_transform = TransformBuilder::new()
-        .add_variation(variations::Linear)
-        .color(1.0)
+
+    let system = SystemBuilder::new()
+        .add_transform(transform)
+        .ttl(MAX_TTL)
         .finalize();
 
     let thread_count = num_cpus::get();
@@ -43,16 +44,14 @@ fn generate() {
         let (tx, rx) = mpsc::channel();
 
         for particle_chunk in particles.chunks_mut(chunk_size) {
-            let (tx, system, transform, final_transform) = (tx.clone(), &system, &transform, &final_transform);
+            let (tx, system) = (tx.clone(), &system);
 
             scope.spawn(move|| {
                 let mut rng = rand::thread_rng();
 
                 for _ in 0..ITERATION_COUNT {
                     for particle in particle_chunk.iter_mut() {
-                        system.animate_particle_mut(particle, transform, &mut rng);
-                        let projected_particle = final_transform.animate(&particle);
-
+                        let projected_particle = system.step(particle, &mut rng);
                         tx.send(Message::Generated(projected_particle)).unwrap();
                     }
                 }
