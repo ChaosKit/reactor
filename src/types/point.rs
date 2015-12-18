@@ -35,6 +35,15 @@ impl Mul<Number> for Point {
     }
 }
 
+impl Mul<(Number, Number)> for Point {
+    type Output = Point;
+
+    fn mul(self, rhs: (Number, Number)) -> Point {
+        let (wx, wy) = rhs;
+        Point { x: self.x * wx, y: self.y * wy }
+    }
+}
+
 impl Rand for Point {
     fn rand<R: Rng>(rng: &mut R) -> Point {
         let range: Range<Number> = Range::new(-1.0, 1.0);

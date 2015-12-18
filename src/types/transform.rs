@@ -1,7 +1,7 @@
 use std::boxed::Box;
 use types::{Number, Point, Particle, Applicable, Variation, AffineTransformation};
 
-type WeightedVariation = (Box<Variation>, Number);
+type WeightedVariation = (Box<Variation>, Number, Number);
 
 pub struct Transform {
     pre: AffineTransformation,
@@ -37,8 +37,8 @@ impl Transform {
 impl Applicable for Transform {
     fn apply(&self, point: &Point) -> Point {
         let initial = self.pre.apply(point);
-        let after_variations = self.variations.iter().fold(initial, |p, &(ref variation, weight)| {
-            variation.apply(&p, &self.pre) * weight
+        let after_variations = self.variations.iter().fold(initial, |p, &(ref variation, weight_x, weight_y)| {
+            variation.apply(&p, &self.pre) * (weight_x, weight_y)
         });
 
         self.post.apply(&after_variations)
@@ -73,12 +73,15 @@ impl TransformBuilder {
     }
 
     pub fn add_variation<T: Variation + 'static>(self, variation: T) -> TransformBuilder {
-        self.add_weighted_variation(variation, 1.0)
+        self.add_2d_weighted_variation(variation, 1.0, 1.0)
     }
 
-    pub fn add_weighted_variation<T: Variation + 'static>(mut self, variation: T, weight: Number) -> TransformBuilder {
-        self.variations.push((Box::new(variation), weight));
+    pub fn add_weighted_variation<T: Variation + 'static>(self, variation: T, weight: Number) -> TransformBuilder {
+        self.add_2d_weighted_variation(variation, weight, weight)
+    }
 
+    pub fn add_2d_weighted_variation<T: Variation + 'static>(mut self, variation: T, weight_x: Number, weight_y: Number) -> TransformBuilder {
+        self.variations.push((Box::new(variation), weight_x, weight_y));
         self
     }
 
