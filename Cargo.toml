@@ -6,5 +6,14 @@ authors = [ "Rafał Hirsz <rafal@hirsz.co>" ]
 [dependencies]
 byteorder = "0.4"
 crossbeam = "0.1"
+image = "0.5"
 rand = "0.3"
 num_cpus = "0.2"
+
+[[bin]]
+name = "reactor"
+path = "src/reactor.rs"
+
+[[bin]]
+name = "reactor-client"
+path = "src/reactor_client.rs"
