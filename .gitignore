@@ -1,3 +1,7 @@
 /target/
 *.png
 *.sh
+*.chaos
+*.json
+*.sublime-project
+*.sublime-workspace
