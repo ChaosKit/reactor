@@ -4,7 +4,7 @@ pub use self::system::System;
 pub use self::affine_transformation::AffineTransformation;
 pub use self::transform::Transform;
 
-pub type Number = f32;
+pub type Number = f64;
 
 pub trait Applicable {
     fn apply(&self, point: &Point) -> Point;

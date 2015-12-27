@@ -1,4 +1,4 @@
-use std::f32;
+use std::f64;
 use types::Number;
 
-pub const PI: Number = f32::consts::PI;
+pub const PI: Number = f64::consts::PI;
