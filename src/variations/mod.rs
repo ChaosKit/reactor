@@ -26,8 +26,8 @@ pub struct DeJong(pub Number, pub Number, pub Number, pub Number);
 impl Variation for DeJong {
     fn apply(&self, point: &Point, _: &AffineTransformation) -> Point {
         Point::from_xy(
-            (self.0 * point.x).sin() - (self.1 * point.y).cos(),
-            (self.2 * point.y).sin() - (self.3 * point.x).cos()
+            (self.0 * point.y).sin() - (self.1 * point.x).cos(),
+            (self.2 * point.x).sin() - (self.3 * point.y).cos()
         )
     }
 }
