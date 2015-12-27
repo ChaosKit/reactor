@@ -2,39 +2,37 @@ extern crate rand;
 extern crate byteorder;
 extern crate num_cpus;
 extern crate crossbeam;
+extern crate capnp;
 
 mod types;
 mod consts;
 mod variations;
+mod interop;
 
-use types::Particle;
+#[allow(dead_code)]
+mod chaoskit_capnp {
+    include!(concat!(env!("OUT_DIR"), "/chaoskit_capnp.rs"));
+}
+
+use types::{Particle, Message};
 use types::system::*;
-use types::transform::*;
 use std::sync::mpsc;
-use std::io::{self, Write};
+use std::io::prelude::*;
+use std::io;
 
-const MAX_TTL: i32 = 30;
+// use types::transform::*;
+// use types::affine_transformation::*;
+
 const PARTICLE_COUNT: i32 = 10000;
 const ITERATION_COUNT: i32 = 1000;
 
-enum Message {
+enum Status {
     Generated(Particle),
     Finished,
 }
 
-fn generate() {
+fn generate(system: System) {
     let mut global_rng = rand::thread_rng();
-
-    let variation = variations::DeJong(-1.860391774909643026, 1.100373086160729041, -1.086431197851741803, -1.426991546514589704);
-    let transform = TransformBuilder::new()
-        .add_variation(variation)
-        .color(1.0)
-        .finalize();
-
-    let system = SystemBuilder::new()
-        .add_transform(transform)
-        .ttl(MAX_TTL)
-        .finalize();
 
     let thread_count = num_cpus::get();
     let chunk_size = ((PARTICLE_COUNT as f32) / (thread_count as f32)).ceil() as usize;
@@ -52,11 +50,11 @@ fn generate() {
                 for _ in 0..ITERATION_COUNT {
                     for particle in particle_chunk.iter_mut() {
                         let projected_particle = system.step(particle, &mut rng);
-                        tx.send(Message::Generated(projected_particle)).unwrap();
+                        tx.send(Status::Generated(projected_particle)).unwrap();
                     }
                 }
 
-                tx.send(Message::Finished).unwrap();
+                tx.send(Status::Finished).unwrap();
             });
         }
 
@@ -66,15 +64,41 @@ fn generate() {
             let message = rx.recv().unwrap();
 
             match message {
-                Message::Generated(particle) => {
+                Status::Generated(particle) => {
                     let _ = stdout.write(&particle.bytes());
                 },
-                Message::Finished => finished_threads += 1
+                Status::Finished => finished_threads += 1
             }
         }
     });
 }
 
 fn main() {
-    generate();
+    // let variation = variations::DeJong(1.6623940085992217,-0.6880100890994072,1.4784153904765844,1.7967103328555822);
+    // let transform = TransformBuilder::new()
+    //     .add_boxed_variation(Box::new(variation))
+    //     .color(0.5)
+    //     .finalize();
+
+    // let system = SystemBuilder::new()
+    //     .add_transform(transform)
+    //     .ttl(150)
+    //     .finalize();
+
+    // generate(system);
+
+    let stdin = io::stdin();
+    let mut reader = io::BufReader::new(stdin);
+
+    match interop::read_message(&mut reader) {
+        Ok(message) => match message {
+            Message::Start(system) => {
+                generate(system);
+            },
+            _ => {}
+        },
+        Err(e) => {
+            println!("Error: {}", e);
+        }
+    }
 }

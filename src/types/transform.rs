@@ -11,10 +11,6 @@ pub struct Transform {
 }
 
 impl Transform {
-    pub fn from_variation<T: Variation + 'static>(variation: T) -> Transform {
-        TransformBuilder::new().add_variation(variation).finalize()
-    }
-
     pub fn color(&self) -> Number {
         return self.color;
     }
@@ -72,16 +68,12 @@ impl TransformBuilder {
         self
     }
 
-    pub fn add_variation<T: Variation + 'static>(self, variation: T) -> TransformBuilder {
-        self.add_2d_weighted_variation(variation, 1.0, 1.0)
+    pub fn add_boxed_variation(self, variation: Box<Variation + 'static>) -> TransformBuilder {
+        self.add_boxed_2d_weighted_variation(variation, 1.0, 1.0)
     }
 
-    pub fn add_weighted_variation<T: Variation + 'static>(self, variation: T, weight: Number) -> TransformBuilder {
-        self.add_2d_weighted_variation(variation, weight, weight)
-    }
-
-    pub fn add_2d_weighted_variation<T: Variation + 'static>(mut self, variation: T, weight_x: Number, weight_y: Number) -> TransformBuilder {
-        self.variations.push((Box::new(variation), weight_x, weight_y));
+    pub fn add_boxed_2d_weighted_variation(mut self, variation: Box<Variation + 'static>, weight_x: Number, weight_y: Number) -> TransformBuilder {
+        self.variations.push((variation, weight_x, weight_y));
         self
     }
 

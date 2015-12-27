@@ -2,13 +2,18 @@
 name = "reactor"
 version = "0.0.1"
 authors = [ "Rafał Hirsz <rafal@hirsz.co>" ]
+build = "build.rs"
 
 [dependencies]
 byteorder = "0.4"
+capnp = "0.5"
 crossbeam = "0.1"
 image = "0.5"
 rand = "0.3"
 num_cpus = "0.2"
+
+[build-dependencies]
+capnpc = "0.5"
 
 [[bin]]
 name = "reactor"

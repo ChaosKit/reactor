@@ -1,5 +1,16 @@
 use types::{Point, Number, Variation, AffineTransformation};
 
+pub fn make_variation(name: &str, params: &[Number]) -> Result<Box<Variation>, &'static str> {
+    match name {
+        "Linear" => Ok(Box::new(Linear)),
+        "DeJong" => {
+            if params.len() < 4 { Err("Not enough parameters") }
+            else { Ok(Box::new(DeJong(params[0], params[1], params[2], params[3]))) }
+        },
+        _ => Err("Invalid variation")
+    }
+}
+
 pub struct Linear;
 
 impl Variation for Linear {

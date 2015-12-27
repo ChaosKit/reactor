@@ -14,6 +14,11 @@ pub trait Variation: Send + Sync {
     fn apply(&self, point: &Point, transformation: &AffineTransformation) -> Point;
 }
 
+pub enum Message {
+    Start(System),
+    Stop
+}
+
 mod point;
 mod particle;
 pub mod system;
