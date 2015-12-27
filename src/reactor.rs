@@ -82,9 +82,11 @@ fn main() {
 
     // let system = SystemBuilder::new()
     //     .add_transform(transform)
+    //     .reset_transformation(AffineTransformation::scale(2.0, 2.0))
     //     .ttl(150)
     //     .finalize();
 
+    // println!("{:#?}", system);
     // generate(system);
 
     let stdin = io::stdin();

@@ -19,6 +19,7 @@ enum MessageType {
 struct Flame {
   transforms @0 :List(Transform);
   finalTransform @1 :Transform;
+  resetTransformation @3 :AffineTransformation;
 
   ttl @2 :Int32;
 }

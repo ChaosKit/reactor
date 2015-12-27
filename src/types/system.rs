@@ -1,4 +1,4 @@
-use types::{Particle, Point, Number, Transform};
+use types::{Particle, Point, Number, Transform, Applicable, AffineTransformation};
 use types::transform::TransformBuilder;
 use rand::{random, Rng};
 use rand::distributions::{IndependentSample, Range};
@@ -14,7 +14,8 @@ pub struct System {
     transforms: Vec<TransformWithLimit>,
     max_range: f64,
     pub final_transform: Transform,
-    pub ttl: i32
+    pub ttl: i32,
+    pub reset_transformation: AffineTransformation
 }
 
 impl System {
@@ -28,7 +29,7 @@ impl System {
     fn reset_particle<'a, R: Rng>(&'a self, particle: &'a mut Particle, rng: &mut R) -> &mut Particle {
         let ttl_range: Range<i32> = Range::new(1, self.ttl);
 
-        particle.point = random::<Point>();
+        particle.point = self.reset_transformation.apply(&random::<Point>());
         particle.color = random::<Number>();
         particle.ttl = ttl_range.ind_sample(rng);
 
@@ -61,6 +62,7 @@ pub struct SystemBuilder {
     transforms: Vec<(Transform, f64)>,
     final_transform: Transform,
     ttl: i32,
+    reset_transformation: AffineTransformation
 }
 
 impl SystemBuilder {
@@ -68,7 +70,8 @@ impl SystemBuilder {
         SystemBuilder {
             transforms: Vec::new(),
             final_transform: TransformBuilder::new().finalize(),
-            ttl: 30
+            ttl: 30,
+            reset_transformation: AffineTransformation::identity()
         }
     }
 
@@ -91,6 +94,11 @@ impl SystemBuilder {
         self
     }
 
+    pub fn reset_transformation(mut self, transformation: AffineTransformation) -> SystemBuilder {
+        self.reset_transformation = transformation;
+        self
+    }
+
     pub fn finalize(self) -> System {
         let starting_points: Vec<f64> = self.transforms.iter().fold(vec![0.0], |mut vec, &(_, weight)| {
             let data = vec[vec.len()-1] + weight;
@@ -108,7 +116,8 @@ impl SystemBuilder {
             transforms: transforms,
             final_transform: self.final_transform,
             ttl: self.ttl,
-            max_range: starting_points[starting_points.len() - 1]
+            max_range: starting_points[starting_points.len() - 1],
+            reset_transformation: self.reset_transformation
         }
     }
 }

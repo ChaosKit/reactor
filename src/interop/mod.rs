@@ -47,6 +47,13 @@ fn read_flame(flame: flame::Reader) -> Result<System, Error> {
         builder = builder.final_transform(transform);
     }
 
+    if flame.has_reset_transformation() {
+        let af_reader = try!(flame.get_reset_transformation());
+        let af = try!(read_affine_transformation(af_reader));
+
+        builder = builder.reset_transformation(af);
+    }
+
     let ttl = flame.get_ttl();
 
     Ok(builder.ttl(ttl).finalize())
