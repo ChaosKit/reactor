@@ -3,6 +3,7 @@ use types::{Number, Point, Particle, Applicable, Variation, AffineTransformation
 
 type WeightedVariation = (Box<Variation>, Number, Number);
 
+#[derive(Debug)]
 pub struct Transform {
     pre: AffineTransformation,
     variations: Vec<WeightedVariation>,

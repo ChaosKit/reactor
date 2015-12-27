@@ -11,6 +11,7 @@ pub fn make_variation(name: &str, params: &[Number]) -> Result<Box<Variation>, &
     }
 }
 
+#[derive(Debug)]
 pub struct Linear;
 
 impl Variation for Linear {
@@ -19,6 +20,7 @@ impl Variation for Linear {
     }
 }
 
+#[derive(Debug)]
 pub struct DeJong(pub Number, pub Number, pub Number, pub Number);
 
 impl Variation for DeJong {

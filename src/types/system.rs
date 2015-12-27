@@ -3,11 +3,13 @@ use types::transform::TransformBuilder;
 use rand::{random, Rng};
 use rand::distributions::{IndependentSample, Range};
 
+#[derive(Debug)]
 struct TransformWithLimit {
     transform: Transform,
     limit: f64
 }
 
+#[derive(Debug)]
 pub struct System {
     transforms: Vec<TransformWithLimit>,
     max_range: f64,

@@ -1,6 +1,6 @@
 use types::{Number, Point, Applicable};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct AffineTransformation(Number, Number, Number, Number, Number, Number);
 
 impl AffineTransformation {

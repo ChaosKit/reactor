@@ -10,7 +10,7 @@ pub trait Applicable {
     fn apply(&self, point: &Point) -> Point;
 }
 
-pub trait Variation: Send + Sync {
+pub trait Variation: Send + Sync + ::std::fmt::Debug {
     fn apply(&self, point: &Point, transformation: &AffineTransformation) -> Point;
 }
 
