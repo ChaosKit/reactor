@@ -6,6 +6,7 @@ use types::{Message, Variation, Number};
 use types::system::*;
 use types::transform::*;
 use types::affine_transformation::*;
+use types::coloring_method::SingleColor;
 use variations;
 
 use chaoskit_capnp::{message, MessageType, flame, transform, variation, affine_transformation};
@@ -82,7 +83,7 @@ fn read_transform(transform: transform::Reader) -> Result<Transform, Error> {
     }
 
     Ok(builder
-        .color(transform.get_color() as Number)
+        .coloring_method(Box::new(SingleColor::new(transform.get_color() as Number)))
         .finalize())
 }
 

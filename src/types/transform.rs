@@ -1,5 +1,6 @@
 use std::boxed::Box;
 use types::{Number, Point, Particle, Applicable, Variation, AffineTransformation};
+use types::coloring_method::{ColoringMethod, SingleColor};
 
 type WeightedVariation = (Box<Variation>, Number, Number);
 
@@ -8,25 +9,27 @@ pub struct Transform {
     pre: AffineTransformation,
     variations: Vec<WeightedVariation>,
     post: AffineTransformation,
-    color: Number
+    coloring_method: Box<ColoringMethod>
 }
 
 impl Transform {
-    pub fn color(&self) -> Number {
-        return self.color;
-    }
-
     pub fn animate(&self, particle: &Particle) -> Particle {
+        let point = self.apply(&particle.point);
+        let color = self.coloring_method.color(&particle, &point);
+
         Particle {
-            point: self.apply(&particle.point),
-            color: (self.color + particle.color) / 2.0,
+            point: point,
+            color: color,
             ttl: particle.ttl
         }
     }
 
     pub fn animate_mut<'a>(&'a self, particle: &'a mut Particle) -> &mut Particle {
-        particle.point = self.apply(&particle.point);
-        particle.color = (self.color + particle.color) / 2.0;
+        let point = self.apply(&particle.point);
+        let color = self.coloring_method.color(&particle, &point);
+
+        particle.point = point;
+        particle.color = color;
         particle
     }
 }
@@ -46,7 +49,7 @@ pub struct TransformBuilder {
     pre: AffineTransformation,
     variations: Vec<WeightedVariation>,
     post: AffineTransformation,
-    color: Number
+    coloring_method: Box<ColoringMethod>
 }
 
 impl TransformBuilder {
@@ -55,7 +58,7 @@ impl TransformBuilder {
             pre: AffineTransformation::identity(),
             post: AffineTransformation::identity(),
             variations: Vec::new(),
-            color: 0.5
+            coloring_method: Box::new(SingleColor::new(0.5))
         }
     }
 
@@ -78,12 +81,12 @@ impl TransformBuilder {
         self
     }
 
-    pub fn color(mut self, color: Number) -> TransformBuilder {
-        self.color = color;
+    pub fn coloring_method(mut self, coloring_method: Box<ColoringMethod>) -> TransformBuilder {
+        self.coloring_method = coloring_method;
         self
     }
 
     pub fn finalize(self) -> Transform {
-        Transform { pre: self.pre, post: self.post, variations: self.variations, color: self.color }
+        Transform { pre: self.pre, post: self.post, variations: self.variations, coloring_method: self.coloring_method }
     }
 }

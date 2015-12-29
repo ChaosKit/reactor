@@ -24,3 +24,4 @@ mod particle;
 pub mod system;
 pub mod affine_transformation;
 pub mod transform;
+pub mod coloring_method;
