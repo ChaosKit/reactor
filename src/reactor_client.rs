@@ -5,6 +5,8 @@ use std::io::{self, Read, BufReader};
 use std::ops;
 use std::path::Path;
 use std::collections::VecDeque;
+use std::convert::From;
+use image::Rgba;
 use byteorder::{ByteOrder, BigEndian};
 
 struct Point {
@@ -22,7 +24,7 @@ struct ProjectedPoint<'a> {
 
 type Pixel = usize;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 struct Color {
     r: f64,
     g: f64,
@@ -57,15 +59,6 @@ impl<'a> ProjectedPoint<'a> {
     fn to_pixel(&self) -> Pixel {
         // Pixel { x: self.x as usize, y: self.y as usize }
         (self.y.trunc() as usize) * self.extent.x + (self.x.trunc() as usize)
-    }
-
-    fn color(&self) -> Color {
-        Color {
-            r: self.color,
-            g: self.color,
-            b: self.color,
-            a: 1.0
-        }
     }
 }
 
@@ -102,9 +95,59 @@ impl<'a> ops::Add for &'a Color {
     }
 }
 
+impl<'a> From<&'a Rgba<u8>> for Color {
+    fn from(rgba: &'a Rgba<u8>) -> Color {
+        Color {
+            r: (rgba[0] as f64) / 255.0,
+            g: (rgba[1] as f64) / 255.0,
+            b: (rgba[2] as f64) / 255.0,
+            a: (rgba[3] as f64) / 255.0
+        }
+    }
+}
+
 struct Extent {
     x: usize,
     y: usize
+}
+
+trait Palette {
+    fn color_at(&self, point: f64) -> Color;
+}
+
+struct BlackWhite;
+
+impl Palette for BlackWhite {
+    fn color_at(&self, point: f64) -> Color {
+        Color { r: point, g: point, b: point, a: 1.0 }
+    }
+}
+
+struct ImagePalette {
+    colors: Vec<Color>
+}
+
+impl ImagePalette {
+    fn from_file(path: &Path) -> Result<ImagePalette, image::ImageError> {
+        let img = try!(image::open(path)).to_rgba();
+        let (width, _) = img.dimensions();
+        let mut colors = Vec::with_capacity(width as usize);
+
+        for x in 0..width {
+            let pixel = img.get_pixel(x, 0);
+            colors.push(Color::from(pixel));
+        }
+
+        Ok(ImagePalette { colors: colors })
+    }
+}
+
+impl Palette for ImagePalette {
+    fn color_at(&self, point: f64) -> Color {
+        let index = (point * self.colors.len() as f64).round() as usize;
+
+        self.colors[index]
+    }
 }
 
 fn filmic_map(x: f64) -> f64 {
@@ -141,6 +184,8 @@ fn main() {
     // let mut file = File::open("testdata.bin").ok().unwrap();
     // let mut reader = BufReader::new(file);
 
+    let palette = ImagePalette::from_file(&Path::new("palette.png")).unwrap();
+
     println!("Capturing points…");
 
     let mut fit_count: i32 = 0;
@@ -172,7 +217,7 @@ fn main() {
                     fit_count += 1;
 
                     let pixel = projected_point.to_pixel();
-                    float_buffer[pixel] = &float_buffer[pixel] + &projected_point.color();
+                    float_buffer[pixel] = &float_buffer[pixel] + &palette.color_at(projected_point.color);
                 }
             }
             Err(err) => panic!("{}", err)
