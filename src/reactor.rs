@@ -19,12 +19,10 @@ use types::system::*;
 use std::sync::mpsc;
 use std::io::prelude::*;
 use std::io;
+use std::env;
 
 // use types::transform::*;
 // use types::affine_transformation::*;
-
-const PARTICLE_COUNT: i32 = 10000;
-const ITERATION_COUNT: i32 = 1000;
 
 enum Status {
     Generated(Particle),
@@ -34,9 +32,12 @@ enum Status {
 fn generate(system: System) {
     let mut global_rng = rand::thread_rng();
 
+    let particle_count = env::var("PARTICLE_COUNT").unwrap_or("10000".to_string()).parse::<u32>().unwrap();
+    let iteration_count = env::var("ITERATION_COUNT").unwrap_or("1000".to_string()).parse::<u32>().unwrap();
+
     let thread_count = num_cpus::get();
-    let chunk_size = ((PARTICLE_COUNT as f32) / (thread_count as f32)).ceil() as usize;
-    let mut particles: Vec<Particle> = (0..PARTICLE_COUNT).map(|_| system.make_particle(&mut global_rng)).collect();
+    let chunk_size = ((particle_count as f32) / (thread_count as f32)).ceil() as usize;
+    let mut particles: Vec<Particle> = (0..particle_count).map(|_| system.make_particle(&mut global_rng)).collect();
 
     crossbeam::scope(|scope| {
         let (tx, rx) = mpsc::channel();
@@ -47,7 +48,7 @@ fn generate(system: System) {
             scope.spawn(move|| {
                 let mut rng = rand::thread_rng();
 
-                for _ in 0..ITERATION_COUNT {
+                for _ in 0..iteration_count {
                     for particle in particle_chunk.iter_mut() {
                         let projected_particle = system.step(particle, &mut rng);
                         tx.send(Status::Generated(projected_particle)).unwrap();
