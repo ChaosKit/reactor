@@ -27,10 +27,14 @@ struct Flame {
 struct Transform {
   variations @0 :List(Variation);
   weight @1 :Float64 = 1.0;
-  color @2 :Float64 = 0.5;
 
   pre @3 :AffineTransformation;
   post @4 :AffineTransformation;
+
+  coloringMethod :union {
+    distance @5 :Void;
+    singleColor @2 :Float64 = 0.5;
+  }
 }
 
 struct Variation {

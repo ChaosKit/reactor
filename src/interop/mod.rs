@@ -6,7 +6,7 @@ use types::{Message, Variation, Number};
 use types::system::*;
 use types::transform::*;
 use types::affine_transformation::*;
-use types::coloring_method::SingleColor;
+use types::coloring_method;
 use variations;
 
 use chaoskit_capnp::{message, MessageType, flame, transform, variation, affine_transformation};
@@ -82,9 +82,19 @@ fn read_transform(transform: transform::Reader) -> Result<Transform, Error> {
         builder = builder.post(try!(read_affine_transformation(try!(transform.get_post()))));
     }
 
-    Ok(builder
-        .coloring_method(Box::new(SingleColor::new(transform.get_color() as Number)))
-        .finalize())
+    match transform.get_coloring_method().which() {
+        Ok(transform::coloring_method::Distance(())) => {
+            builder = builder.coloring_method(Box::new(coloring_method::Distance));
+        },
+        Ok(transform::coloring_method::SingleColor(color)) => {
+            builder = builder.coloring_method(Box::new(coloring_method::SingleColor::new(color as Number)));
+        },
+        Err(capnp::NotInSchema(_)) => {
+            return Err(Error::new("Invalid coloring method"));
+        }
+    }
+
+    Ok(builder.finalize())
 }
 
 fn read_variation(variation: variation::Reader) -> Result<Box<Variation>, Error> {
