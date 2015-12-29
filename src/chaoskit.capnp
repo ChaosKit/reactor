@@ -32,6 +32,7 @@ struct Transform {
   post @4 :AffineTransformation;
 
   coloringMethod :union {
+    noop @6 :Void;
     distance @5 :Void;
     singleColor @2 :Float64 = 0.5;
   }

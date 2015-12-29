@@ -5,6 +5,15 @@ pub trait ColoringMethod: Sync + Send + ::std::fmt::Debug {
 }
 
 #[derive(Debug)]
+pub struct Noop;
+
+impl ColoringMethod for Noop {
+    fn color(&self, old: &Particle, _new: &Point) -> Number {
+        old.color
+    }
+}
+
+#[derive(Debug)]
 pub struct Distance;
 
 impl ColoringMethod for Distance {

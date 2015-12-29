@@ -83,6 +83,9 @@ fn read_transform(transform: transform::Reader) -> Result<Transform, Error> {
     }
 
     match transform.get_coloring_method().which() {
+        Ok(transform::coloring_method::Noop(())) => {
+            builder = builder.coloring_method(Box::new(coloring_method::Noop));
+        },
         Ok(transform::coloring_method::Distance(())) => {
             builder = builder.coloring_method(Box::new(coloring_method::Distance));
         },
