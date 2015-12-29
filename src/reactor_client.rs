@@ -168,7 +168,7 @@ fn tone_map(subpixel: f64, exposure: f64) -> f64 {
 fn make_image(colors: Vec<Color>) -> Vec<u8> {
     let average_brightness = colors.iter().map(|ref color| color.a).fold(0.0, |current, alpha| current + alpha) / colors.len() as f64;
 
-    let exposure = 8.0 / average_brightness.log2();
+    let exposure = 12.0 / average_brightness.log2();
 
     colors.iter().flat_map(move|ref color| color.map(exposure).into_iter()).collect()
 }
