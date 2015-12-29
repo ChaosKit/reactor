@@ -41,8 +41,8 @@ impl Point {
 
     fn project<'a>(&'a self, extent: &'a Extent) -> ProjectedPoint {
         ProjectedPoint {
-            x: (self.x + 3.0) / 6.0 * (extent.x as f64),
-            y: (self.y + 3.0) / 6.0 * (extent.y as f64),
+            x: (self.x + 2.0) / 4.0 * (extent.x as f64),
+            y: (self.y + 2.0) / 4.0 * (extent.y as f64),
             color: self.color,
             extent: extent
         }
@@ -74,16 +74,17 @@ impl Color {
         Color {r: 0.0, g: 0.0, b: 0.0, a: 0.0}
     }
 
-    fn map(&self) -> Vec<u8> {
+    fn map(&self, exposure: f64) -> Vec<u8> {
         if self.a == 0.0 {
             return vec![0u8; 3];
         }
 
-        let scale = self.a.log10() / self.a;
+        let scale = self.a.log2() / self.a;
+
         vec![
-            (tone_map(self.r * scale) * 255.0).trunc() as u8,
-            (tone_map(self.g * scale) * 255.0).trunc() as u8,
-            (tone_map(self.b * scale) * 255.0).trunc() as u8
+            (tone_map(self.r * scale, exposure) * 255.0).trunc() as u8,
+            (tone_map(self.g * scale, exposure) * 255.0).trunc() as u8,
+            (tone_map(self.b * scale, exposure) * 255.0).trunc() as u8
         ]
     }
 }
@@ -106,8 +107,27 @@ struct Extent {
     y: usize
 }
 
-fn tone_map(subpixel: f64) -> f64 {
-    subpixel / (subpixel + 1.0)
+fn filmic_map(x: f64) -> f64 {
+    const SHOULDER_STRENGTH: f64 = 0.15;
+    const LINEAR_STRENGTH: f64 = 0.7;
+    const LINEAR_ANGLE: f64 = 0.1;
+    const TOE_STRENGTH: f64 = 6.0;
+    const TOE_NUMERATOR: f64 = 0.02;
+    const TOE_DENOMINATOR: f64 = 0.3;
+
+    ((x * (SHOULDER_STRENGTH * x + LINEAR_ANGLE * LINEAR_STRENGTH) + TOE_STRENGTH * TOE_NUMERATOR) / (x * (SHOULDER_STRENGTH * x + LINEAR_STRENGTH) + TOE_STRENGTH * TOE_DENOMINATOR)) - TOE_NUMERATOR / TOE_DENOMINATOR
+}
+
+fn tone_map(subpixel: f64, exposure: f64) -> f64 {
+    filmic_map(subpixel * exposure)
+}
+
+fn make_image(colors: Vec<Color>) -> Vec<u8> {
+    let average_brightness = colors.iter().map(|ref color| color.a).fold(0.0, |current, alpha| current + alpha) / colors.len() as f64;
+
+    let exposure = 8.0 / average_brightness.log2();
+
+    colors.iter().flat_map(move|ref color| color.map(exposure).into_iter()).collect()
 }
 
 const IMAGE_SIZE: Extent = Extent { x: 1024, y: 1024 };
@@ -162,7 +182,7 @@ fn main() {
     println!("{} points captured, {} fit", total_count, fit_count);
     println!("Creating image…");
 
-    let byte_buffer: Vec<u8> = float_buffer.iter().flat_map(|ref color| color.map().into_iter()).collect();
+    let byte_buffer = make_image(float_buffer);
 
     image::save_buffer(&Path::new("output.png"), &byte_buffer[..], IMAGE_SIZE.x as u32, IMAGE_SIZE.y as u32, image::RGB(8)).unwrap()
 }
