@@ -144,7 +144,7 @@ impl ImagePalette {
 
 impl Palette for ImagePalette {
     fn color_at(&self, point: f64) -> Color {
-        let index = (point * self.colors.len() as f64).round() as usize;
+        let index = (point * (self.colors.len() - 1) as f64).round() as usize;
 
         self.colors[index]
     }
