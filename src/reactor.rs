@@ -29,21 +29,20 @@ enum Status {
     Finished,
 }
 
-const CHANNEL_SIZE: usize = 1024 * 1024;
-const PARTICLE_BUFFER_SIZE: usize = 1024;
-
 fn generate(system: System) {
     let mut global_rng = rand::thread_rng();
 
     let particle_count = env::var("PARTICLE_COUNT").unwrap_or("10000".to_string()).parse::<u32>().unwrap();
     let iteration_count = env::var("ITERATION_COUNT").unwrap_or("1000".to_string()).parse::<u32>().unwrap();
+    let particle_buffer_size = env::var("PARTICLE_BUFFER_SIZE").unwrap_or("1000".to_string()).parse::<usize>().unwrap();
+    let channel_size = env::var("CHANNEL_SIZE").unwrap_or("10".to_string()).parse::<usize>().unwrap();
 
     let thread_count = num_cpus::get();
     let chunk_size = ((particle_count as f32) / (thread_count as f32)).ceil() as usize;
     let mut particles: Vec<Particle> = (0..particle_count).map(|_| system.make_particle(&mut global_rng)).collect();
 
     crossbeam::scope(|scope| {
-        let (tx, rx) = mpsc::sync_channel(CHANNEL_SIZE);
+        let (tx, rx) = mpsc::sync_channel(channel_size);
 
         for particle_chunk in particles.chunks_mut(chunk_size) {
             let (tx, system) = (tx.clone(), &system);
@@ -51,17 +50,17 @@ fn generate(system: System) {
             scope.spawn(move|| {
                 let mut rng = rand::thread_rng();
 
-                let mut buffer = Vec::with_capacity(PARTICLE_BUFFER_SIZE);
+                let mut buffer = Vec::with_capacity(particle_buffer_size);
 
                 for _ in 0..iteration_count {
                     for particle in particle_chunk.iter_mut() {
                         let projected_particle = system.step(particle, &mut rng);
 
-                        if buffer.len() < PARTICLE_BUFFER_SIZE {
+                        if buffer.len() < particle_buffer_size {
                             buffer.push(projected_particle);
                         } else {
-                            tx.send(Status::Generated(buffer)).unwrap();
-                            buffer = Vec::with_capacity(PARTICLE_BUFFER_SIZE);
+                            tx.send(Status::Generated(buffer.clone())).unwrap();
+                            buffer.clear();
                         }
                     }
                 }
