@@ -65,6 +65,10 @@ fn generate(system: System) {
                     }
                 }
 
+                if buffer.len() > 0 {
+                    tx.send(Status::Generated(buffer)).unwrap();
+                }
+
                 tx.send(Status::Finished).unwrap();
             });
         }
