@@ -25,9 +25,12 @@ use std::env;
 // use types::affine_transformation::*;
 
 enum Status {
-    Generated(Particle),
+    Generated(Vec<Particle>),
     Finished,
 }
+
+const CHANNEL_SIZE: usize = 1024 * 1024;
+const PARTICLE_BUFFER_SIZE: usize = 1024;
 
 fn generate(system: System) {
     let mut global_rng = rand::thread_rng();
@@ -40,7 +43,7 @@ fn generate(system: System) {
     let mut particles: Vec<Particle> = (0..particle_count).map(|_| system.make_particle(&mut global_rng)).collect();
 
     crossbeam::scope(|scope| {
-        let (tx, rx) = mpsc::channel();
+        let (tx, rx) = mpsc::sync_channel(CHANNEL_SIZE);
 
         for particle_chunk in particles.chunks_mut(chunk_size) {
             let (tx, system) = (tx.clone(), &system);
@@ -48,10 +51,18 @@ fn generate(system: System) {
             scope.spawn(move|| {
                 let mut rng = rand::thread_rng();
 
+                let mut buffer = Vec::with_capacity(PARTICLE_BUFFER_SIZE);
+
                 for _ in 0..iteration_count {
                     for particle in particle_chunk.iter_mut() {
                         let projected_particle = system.step(particle, &mut rng);
-                        tx.send(Status::Generated(projected_particle)).unwrap();
+
+                        if buffer.len() < PARTICLE_BUFFER_SIZE {
+                            buffer.push(projected_particle);
+                        } else {
+                            tx.send(Status::Generated(buffer)).unwrap();
+                            buffer = Vec::with_capacity(PARTICLE_BUFFER_SIZE);
+                        }
                     }
                 }
 
@@ -59,14 +70,17 @@ fn generate(system: System) {
             });
         }
 
-        let mut stdout = io::stdout();
+        let stdout = io::stdout();
+        let mut writer = io::BufWriter::new(stdout);
         let mut finished_threads: usize = 0;
         while finished_threads < thread_count {
             let message = rx.recv().unwrap();
 
             match message {
-                Status::Generated(particle) => {
-                    let _ = stdout.write(&particle.bytes());
+                Status::Generated(buffer) => {
+                    for particle in buffer.iter() {
+                        let _ = writer.write(&particle.bytes());
+                    }
                 },
                 Status::Finished => finished_threads += 1
             }
