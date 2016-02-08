@@ -36,10 +36,6 @@ impl System {
         particle
     }
 
-    fn animate_particle<R: Rng>(&self, particle: Particle, transform: &Transform, rng: &mut R) -> Particle {
-        transform.animate(&if particle.ttl <= 0 { self.make_particle(rng) } else { particle }).aged()
-    }
-
     fn animate_particle_mut<'a, R: Rng>(&'a self, particle: &'a mut Particle, transform: &'a Transform, rng: &mut R) -> &mut Particle {
         transform.animate_mut(if particle.ttl <= 0 { self.reset_particle(particle, rng) } else { particle }).age()
     }
@@ -73,10 +69,6 @@ impl SystemBuilder {
             ttl: 30,
             reset_transformation: AffineTransformation::identity()
         }
-    }
-
-    pub fn add_transform(self, transform: Transform) -> SystemBuilder {
-        self.add_weighted_transform(transform, 1.0)
     }
 
     pub fn add_weighted_transform(mut self, transform: Transform, weight: f64) -> SystemBuilder {

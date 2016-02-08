@@ -7,18 +7,6 @@ impl AffineTransformation {
     pub fn identity() -> AffineTransformation {
         AffineTransformationBuilder::new().finalize()
     }
-
-    pub fn rotation(angle: Number) -> AffineTransformation {
-        AffineTransformationBuilder::new().rotation(angle).finalize()
-    }
-
-    pub fn scale(x: Number, y: Number) -> AffineTransformation {
-        AffineTransformationBuilder::new().scale(x, y).finalize()
-    }
-
-    pub fn translation(x: Number, y: Number) -> AffineTransformation {
-        AffineTransformationBuilder::new().translation(x, y).finalize()
-    }
 }
 
 impl Applicable for AffineTransformation {

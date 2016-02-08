@@ -28,12 +28,6 @@ impl Particle {
         buffer
     }
 
-    pub fn aged(self) -> Particle {
-        let mut particle = self.clone();
-        particle.age();
-        particle
-    }
-
     pub fn age(&mut self) -> &mut Particle {
         self.ttl -= 1;
         self

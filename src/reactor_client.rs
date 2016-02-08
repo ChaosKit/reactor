@@ -115,14 +115,6 @@ trait Palette {
     fn color_at(&self, point: f64) -> Color;
 }
 
-struct BlackWhite;
-
-impl Palette for BlackWhite {
-    fn color_at(&self, point: f64) -> Color {
-        Color { r: point, g: point, b: point, a: 1.0 }
-    }
-}
-
 struct ImagePalette {
     colors: Vec<Color>
 }
