@@ -67,17 +67,18 @@ impl Color {
         Color {r: 0.0, g: 0.0, b: 0.0, a: 0.0}
     }
 
-    fn map(&self, exposure: f64) -> Vec<u8> {
+    fn map(&self, exposure: f64, gamma: f64) -> Vec<u8> {
         if self.a == 0.0 {
             return vec![0u8; 3];
         }
 
         let scale = self.a.log2() / self.a;
+        let inverted_gamma = 1.0 / gamma;
 
         vec![
-            (tone_map(self.r * scale, exposure) * 255.0).trunc() as u8,
-            (tone_map(self.g * scale, exposure) * 255.0).trunc() as u8,
-            (tone_map(self.b * scale, exposure) * 255.0).trunc() as u8
+            ((tone_map(self.r * scale) * exposure).powf(inverted_gamma) * 255.0).min(255.0).trunc() as u8,
+            ((tone_map(self.g * scale) * exposure).powf(inverted_gamma) * 255.0).min(255.0).trunc() as u8,
+            ((tone_map(self.b * scale) * exposure).powf(inverted_gamma) * 255.0).min(255.0).trunc() as u8
         ]
     }
 }
@@ -142,27 +143,23 @@ impl Palette for ImagePalette {
     }
 }
 
-fn filmic_map(x: f64) -> f64 {
-    const SHOULDER_STRENGTH: f64 = 0.15;
-    const LINEAR_STRENGTH: f64 = 0.7;
-    const LINEAR_ANGLE: f64 = 0.1;
-    const TOE_STRENGTH: f64 = 6.0;
-    const TOE_NUMERATOR: f64 = 0.02;
-    const TOE_DENOMINATOR: f64 = 0.3;
-
-    ((x * (SHOULDER_STRENGTH * x + LINEAR_ANGLE * LINEAR_STRENGTH) + TOE_STRENGTH * TOE_NUMERATOR) / (x * (SHOULDER_STRENGTH * x + LINEAR_STRENGTH) + TOE_STRENGTH * TOE_DENOMINATOR)) - TOE_NUMERATOR / TOE_DENOMINATOR
+fn tone_map(subpixel: f64) -> f64 {
+    subpixel / (subpixel + 1.0)
 }
 
-fn tone_map(subpixel: f64, exposure: f64) -> f64 {
-    filmic_map(subpixel * exposure)
+fn magic_model_fn(x: f64, a: f64, b: f64) -> f64 {
+    (1.0 - a).powf(x.powf(b))
 }
 
-fn make_image(colors: Vec<Color>) -> Vec<u8> {
-    let average_brightness = colors.iter().map(|ref color| color.a).fold(0.0, |current, alpha| current + alpha) / colors.len() as f64;
+fn make_image(colors: Vec<Color>, particle_count: i32) -> Vec<u8> {
+    let exposure_f = magic_model_fn(particle_count as f64, 0.0796457, 0.153342);
+    let gamma = magic_model_fn(particle_count as f64, 0.0999924, 0.178006);
 
-    let exposure = 12.0 / average_brightness.log2();
+    println!("Exposure: {:.*}, Gamma: {:.*}", 6, exposure_f, 6, gamma);
 
-    colors.iter().flat_map(move|ref color| color.map(exposure).into_iter()).collect()
+    let exposure = (2.0f64).powf(exposure_f);
+
+    colors.iter().flat_map(move|ref color| color.map(exposure, gamma).into_iter()).collect()
 }
 
 const IMAGE_SIZE: Extent = Extent { x: 1024, y: 1024 };
@@ -219,7 +216,7 @@ fn main() {
     println!("{} points captured, {} fit", total_count, fit_count);
     println!("Creating image…");
 
-    let byte_buffer = make_image(float_buffer);
+    let byte_buffer = make_image(float_buffer, fit_count);
 
     image::save_buffer(&Path::new("output.png"), &byte_buffer[..], IMAGE_SIZE.x as u32, IMAGE_SIZE.y as u32, image::RGB(8)).unwrap()
 }
