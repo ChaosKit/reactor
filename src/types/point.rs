@@ -1,6 +1,6 @@
 use std::fmt;
 use std::io::Write;
-use std::ops::Mul;
+use std::ops::{Add, Mul};
 use types::Number;
 use rand::{Rand, Rng};
 use rand::distributions::{IndependentSample, Range};
@@ -24,6 +24,14 @@ impl Point {
 impl fmt::Debug for Point {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
+impl Add<Point> for Point {
+    type Output = Point;
+
+    fn add(self, rhs: Point) -> Point {
+        Point { x: self.x + rhs.x, y: self.y + rhs.y }
     }
 }
 

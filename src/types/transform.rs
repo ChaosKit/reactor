@@ -37,9 +37,16 @@ impl Transform {
 impl Applicable for Transform {
     fn apply(&self, point: &Point) -> Point {
         let initial = self.pre.apply(point);
-        let after_variations = self.variations.iter().fold(initial, |p, &(ref variation, weight_x, weight_y)| {
-            variation.apply(&p, &self.pre) * (weight_x, weight_y)
-        });
+
+        let after_variations = if self.variations.is_empty() {
+            initial
+        } else {
+            self.variations.iter()
+                .map(|&(ref variation, weight_x, weight_y)| {
+                    variation.apply(&initial, &self.pre) * (weight_x, weight_y)
+                })
+                .fold(Point::new(), |result, p| { result + p })
+        };
 
         self.post.apply(&after_variations)
     }
